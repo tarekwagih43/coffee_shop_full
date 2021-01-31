@@ -13,7 +13,8 @@ log.txt
 npm-debug.log*
 node_modules
 
-
+resources
+config.xml
 
 
 .idea/
