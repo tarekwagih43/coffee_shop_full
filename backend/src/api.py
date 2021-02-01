@@ -66,7 +66,6 @@ def drinks():
 def get_drinks_detail(jwt):
     drinks = Drink.query.all()
     drinks = [drink.long() for drink in drinks]
-    print(drinks)
     return jsonify({'success': True, 'drinks': drinks})
 
 
@@ -85,10 +84,16 @@ def get_drinks_detail(jwt):
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def create_drink(jwt):
-    data = json.loads(request.data)
-    title = data['title']
-    recip = data['recipe']
-    rec = json.dumps(recip)
+    data = dict(request.form or request.json or request.data)
+    if 'title' not in data:
+        abort(401)
+    else:
+        title = data['title']
+    if 'recipe' not in data:
+        abort(401)
+    else:
+        recip = data['recipe']
+        rec = json.dumps(recip)
     drink = Drink(
         title=title,
         recipe=rec
@@ -116,13 +121,23 @@ def create_drink(jwt):
 @app.route('/drinks/<id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
 def post_drink(jwt, id):
-    data = json.loads(request.data)
-    recip = data['recipe']
-    rec = json.dumps(recip)
+    data = dict(request.form or request.json or request.data)
+    if 'title' not in data:
+        abort(404)
+    else:
+        title = data['title']
+    if 'recipe' not in data:
+        abort(404)
+    else:
+        recip = data['recipe']
+        rec = json.dumps(recip)
+
     drink = Drink.query.filter_by(id=id).one_or_none()
-    drink.title = data['title']
-    drink.recipe = rec
-    drink.update()
+    if drink:
+        drink.title = title
+        drink.recipe = rec
+        drink.update()
+
     drinks_new = Drink.query.all()
     drinks = [drink.long() for drink in drinks_new]
     return jsonify({"success": True, "drinks": drinks})

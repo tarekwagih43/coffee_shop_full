@@ -1,3 +1,4 @@
+import os
 import json
 from flask import request, _request_ctx_stack, request, abort, jsonify
 from functools import wraps
@@ -5,9 +6,15 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = 'coffee-login.us.auth0.com'
+
+#os.environ['DOMAIN'] = 'coffee-login.us.auth0.com'
+#os.environ['AUDIENCE'] = 'login'
+
+
+AUTH0_DOMAIN = os.environ.get('DOMAIN')
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'login'
+API_AUDIENCE = os.environ.get('AUDIENCE')
+
 
 # AuthError Exception
 '''
@@ -66,7 +73,7 @@ def check_permissions(permission, payload):
         abort(400)
 
     if permission not in payload['permissions']:
-        abort(403)
+        abort(401)
     return True
 
 '''
@@ -85,9 +92,12 @@ def check_permissions(permission, payload):
 
 
 def verify_decode_jwt(token):
-    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
-    jwks = json.loads(jsonurl.read())
-    unverified_header = jwt.get_unverified_header(token)
+    if AUTH0_DOMAIN:
+        jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+        jwks = json.loads(jsonurl.read())
+        unverified_header = jwt.get_unverified_header(token)
+    else:
+        abort(500)
 
     # CHOOSE OUR KEY
     rsa_key = {}
